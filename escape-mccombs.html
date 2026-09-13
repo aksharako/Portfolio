@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#fbfaf7" />
+<title>Escape McCombs — Akshara Koratamaddi</title>
+<meta name="description" content="Case study — solo build of a full-stack coding escape room for BAXA at UT McCombs. Next.js, Supabase, Pyodide, real Python in the browser, plus full brand system." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='68' font-family='Georgia' font-style='italic' font-size='60' text-anchor='middle' fill='%235a9aa3'%3Eak%3C/text%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --white: #fbfaf7; --paper: #f4f1ec; --tint: #e8eeed;
+    --ocean: #5a9aa3; --ocean-deep: #37747d;
+    --coral: #d47a5a; --coral-deep: #a8583b;
+    --ink: #1a1f26; --ink-soft: #4a5560; --ink-faded: #8a939b;
+    --line: #e6e2da;
+    --success: #3fb950;
+    --burnt: #bf5700;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --hand: 'Caveat', cursive;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--white); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+  .container-narrow { max-width: 780px; margin: 0 auto; padding: 0 40px; }
+  @media (max-width: 640px) { .container, .container-narrow { padding: 0 20px; } }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;
+    background: rgba(251, 250, 247, 0.85); backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: var(--serif); font-size: 24px; font-style: italic;
+    color: var(--ink); text-decoration: none; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-logo .mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--ocean); color: var(--white); font-size: 14px; font-style: italic;
+  }
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: transparent; color: var(--ink-soft);
+    text-decoration: none; font-size: 14px;
+    border-radius: 100px; border: 1px solid var(--line); transition: all 0.2s;
+  }
+  .nav-back:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+  .case-hero { padding: 140px 0 60px; }
+  .case-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; background: var(--paper); border-radius: 100px;
+    font-size: 12px; color: var(--coral);
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500;
+    margin-bottom: 32px;
+  }
+  .case-chip::before {
+    content: ''; width: 6px; height: 6px; background: var(--coral); border-radius: 50%;
+  }
+  .case-title {
+    font-family: var(--serif); font-size: clamp(48px, 8vw, 108px);
+    line-height: 0.98; color: var(--ink);
+    letter-spacing: -0.025em; margin-bottom: 32px;
+  }
+  .case-title em { font-style: italic; color: var(--coral); }
+  .case-sub {
+    font-family: var(--serif); font-style: italic;
+    font-size: clamp(22px, 2.4vw, 28px); color: var(--ink-soft);
+    line-height: 1.4; max-width: 780px; margin-bottom: 56px;
+  }
+  .case-meta {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 32px 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    margin-bottom: 60px;
+  }
+  @media (max-width: 720px) { .case-meta { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+  .meta-item .label {
+    font-family: var(--sans); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-faded); margin-bottom: 6px;
+  }
+  .meta-item .value {
+    font-family: var(--serif); font-size: 17px; color: var(--ink); line-height: 1.3;
+  }
+  .meta-item .value em { font-style: italic; color: var(--coral); }
+
+  /* ===== HERO PYTHON PUZZLE VISUAL ===== */
+  .hero-visual {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 60%, #21262d 100%);
+    padding: 60px 0; margin-bottom: 60px; position: relative; overflow: hidden;
+  }
+  .hero-visual::before {
+    content: ''; position: absolute;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212, 122, 90, 0.15), transparent 70%);
+    top: -100px; right: -100px;
+  }
+  .code-stage {
+    max-width: 800px; margin: 0 auto; padding: 0 40px;
+    position: relative; z-index: 2;
+  }
+  .code-editor-mock {
+    background: #0d1117;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    border: 1px solid #21262d;
+  }
+  .code-editor-mock .titlebar {
+    background: #161b22;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #21262d;
+  }
+  .code-editor-mock .titlebar .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+  .code-editor-mock .titlebar .dot.r { background: #ff5f56; }
+  .code-editor-mock .titlebar .dot.y { background: #ffbd2e; }
+  .code-editor-mock .titlebar .dot.g { background: #27c93f; }
+  .code-editor-mock .titlebar .file {
+    font-family: var(--mono); font-size: 11px; color: #8b949e;
+    margin-left: 16px;
+  }
+  .code-editor-mock .titlebar .badge {
+    margin-left: auto; font-family: var(--mono); font-size: 10px;
+    color: #d47a5a; letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  .code-body {
+    display: grid; grid-template-columns: 1fr 1fr;
+    min-height: 320px;
+  }
+  @media (max-width: 640px) { .code-body { grid-template-columns: 1fr; } }
+  .code-input {
+    padding: 20px; font-family: var(--mono); font-size: 12px;
+    line-height: 1.6; color: #e6edf3;
+    background: #0d1117; border-right: 1px solid #21262d;
+    overflow: hidden;
+  }
+  @media (max-width: 640px) { .code-input { border-right: none; border-bottom: 1px solid #21262d; } }
+  .code-input .ln {
+    display: flex; gap: 12px;
+  }
+  .code-input .n {
+    color: #484f58; user-select: none; min-width: 12px; text-align: right;
+  }
+  .code-input .k { color: #ff7b72; }
+  .code-input .s { color: #a5d6ff; }
+  .code-input .c { color: #6e7681; font-style: italic; }
+  .code-input .f { color: #d2a8ff; }
+  .code-input .v { color: #ffa657; }
+  .code-input .m { color: #79c0ff; }
+
+  .code-output {
+    padding: 20px; background: #010409; color: #e6edf3;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .code-output .label {
+    font-family: var(--mono); font-size: 10px; color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    padding-bottom: 8px; border-bottom: 1px solid #21262d;
+  }
+  .code-output .out-line {
+    font-family: var(--mono); font-size: 11px; color: #e6edf3;
+  }
+  .code-output .plot-mock {
+    background: #fbfaf7; border-radius: 4px; padding: 12px;
+    display: flex; align-items: flex-end; gap: 4px;
+    height: 90px; margin-top: 6px;
+  }
+  .code-output .plot-mock .bar {
+    flex: 1; background: #d47a5a; border-radius: 2px 2px 0 0;
+  }
+  .code-output .plot-mock .bar.hi { background: #37747d; }
+  .code-output .solved {
+    background: rgba(63, 185, 80, 0.1);
+    border: 1px solid rgba(63, 185, 80, 0.35);
+    border-radius: 5px;
+    padding: 10px 12px; margin-top: auto;
+    color: #3fb950; font-family: var(--mono); font-size: 11px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .code-output .solved::before {
+    content: '✓'; font-size: 14px;
+  }
+
+  /* ===== ARCHITECTURE DIAGRAM ===== */
+  .arch-showcase {
+    background: var(--paper); padding: 60px 0; margin-bottom: 60px;
+  }
+  .arch-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; max-width: 900px; margin: 0 auto; padding: 0 40px;
+    position: relative;
+  }
+  @media (max-width: 720px) { .arch-grid { grid-template-columns: repeat(2, 1fr); padding: 0 20px; } }
+
+  .arch-node {
+    background: var(--white); border-radius: 10px;
+    padding: 20px 16px; text-align: center;
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.08);
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .arch-node .icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: white;
+    box-shadow: 0 4px 10px rgba(212,122,90,0.3);
+    margin-bottom: 4px;
+  }
+  .arch-node .icon.blue { background: linear-gradient(135deg, var(--ocean), var(--ocean-deep)); box-shadow: 0 4px 10px rgba(90,154,163,0.3); }
+  .arch-node .icon.dark { background: linear-gradient(135deg, var(--ink), #2a2f38); box-shadow: 0 4px 10px rgba(26,31,38,0.3); }
+  .arch-node .icon.green { background: linear-gradient(135deg, #3fb950, #2d8a3e); box-shadow: 0 4px 10px rgba(63,185,80,0.3); }
+  .arch-node .n {
+    font-family: var(--serif); font-size: 15px;
+    color: var(--ink); font-weight: 500;
+  }
+  .arch-node .n em { font-style: italic; color: var(--coral); }
+  .arch-node .l {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--ink-faded); letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
+  /* ===== BRAND SYSTEM ===== */
+  .brand-showcase {
+    background: var(--white); padding: 60px 0; margin-bottom: 40px;
+  }
+  .brand-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    max-width: 900px; margin: 0 auto; padding: 0 40px;
+  }
+  @media (max-width: 640px) { .brand-grid { grid-template-columns: 1fr; padding: 0 20px; } }
+  .brand-panel {
+    background: var(--paper); border-radius: 12px; padding: 32px 28px;
+  }
+  .brand-panel .label {
+    font-family: var(--sans); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-faded); margin-bottom: 20px;
+  }
+  .logo-preview {
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 0; min-height: 140px;
+  }
+  .escape-logo { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .escape-logo .icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+    color: white; font-size: 28px;
+    box-shadow: 0 6px 14px rgba(212,122,90,0.35);
+    position: relative;
+  }
+  .escape-logo .icon::before {
+    content: ''; position: absolute; inset: -3px;
+    border: 1.5px dashed var(--coral); border-radius: 14px; opacity: 0.5;
+  }
+  .escape-logo .wordmark {
+    font-family: var(--serif); font-size: 28px; color: var(--ink); line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .escape-logo .wordmark em { font-style: italic; color: var(--coral); }
+  .escape-logo .tag {
+    font-family: var(--mono); font-size: 9px; color: var(--ink-faded);
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .colors-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .swatch { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .swatch .chip {
+    width: 100%; aspect-ratio: 1/1; border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  }
+  .swatch .name { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); }
+
+  /* ===== POSTERS ===== */
+  .posters {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    max-width: 900px; margin: 0 auto; padding: 0 40px 20px;
+  }
+  @media (max-width: 720px) { .posters { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .posters { grid-template-columns: 1fr; } }
+  .poster {
+    aspect-ratio: 3/4; padding: 24px 20px;
+    display: flex; flex-direction: column; text-align: center;
+    color: var(--white);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);
+    position: relative; overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  .poster:hover { transform: translateY(-6px) rotate(0deg) !important; }
+  .poster:nth-child(1) { transform: rotate(-2deg); }
+  .poster:nth-child(2) { transform: rotate(1deg); z-index: 2; }
+  .poster:nth-child(3) { transform: rotate(-1deg); }
+  .poster::before {
+    content: ''; position: absolute; inset: 8px;
+    border: 1px solid rgba(255,255,255,0.35);
+    pointer-events: none;
+  }
+  .poster.p1 { background: linear-gradient(135deg, var(--coral) 0%, var(--coral-deep) 100%); }
+  .poster.p2 { background: linear-gradient(135deg, var(--ink) 0%, #2a2f38 100%); color: var(--white); }
+  .poster.p3 { background: linear-gradient(135deg, var(--coral) 0%, #f4d5c2 100%); color: var(--ink); }
+  .poster .tag {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    opacity: 0.8; margin-bottom: 8px;
+  }
+  .poster h4 {
+    font-family: var(--serif); font-size: 26px; line-height: 1;
+    letter-spacing: -0.01em; margin-bottom: 4px;
+  }
+  .poster h4 em { font-style: italic; }
+  .poster .p-sub {
+    font-family: var(--serif); font-style: italic; font-size: 11px;
+    opacity: 0.85; margin-bottom: 16px;
+  }
+  .poster .p-icon { font-size: 42px; margin: 12px 0; line-height: 1; }
+  .poster .p-details {
+    margin-top: auto; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    font-family: var(--mono); font-size: 8px;
+    letter-spacing: 0.1em; line-height: 1.6; text-align: left;
+    opacity: 0.9;
+  }
+  .poster.p3 .p-details { border-top-color: rgba(0,0,0,0.15); }
+  .poster.p2 .p-details { border-top-color: rgba(255,255,255,0.15); }
+  .poster .p-details strong {
+    display: block; font-family: var(--serif); font-style: italic;
+    font-weight: 400; font-size: 11px; margin-bottom: 2px; color: inherit;
+  }
+
+  section.case-section { padding: 60px 0; }
+  .case-section h2 {
+    font-family: var(--serif); font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.1; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 24px;
+  }
+  .case-section h2 em { font-style: italic; color: var(--coral); }
+  .case-section h3 {
+    font-family: var(--serif); font-size: 22px; color: var(--ink);
+    margin-top: 32px; margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+  .case-section h3 em { font-style: italic; color: var(--coral); }
+  .case-section p {
+    font-size: 17px; line-height: 1.65; color: var(--ink-soft); margin-bottom: 20px;
+  }
+  .case-section p strong { color: var(--ink); font-weight: 500; }
+  .case-label {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--coral);
+    margin-bottom: 16px; display: block;
+  }
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+  .stack .pill {
+    padding: 6px 14px; background: var(--paper); border-radius: 100px;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+  }
+  .three-col {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; margin: 32px 0;
+  }
+  @media (max-width: 640px) { .three-col { grid-template-columns: 1fr; } }
+  .three-col .card {
+    padding: 24px; background: var(--paper); border-radius: 8px;
+    border-top: 3px solid var(--coral);
+  }
+  .three-col .card .num {
+    font-family: var(--serif); font-style: italic; font-size: 13px;
+    color: var(--coral); margin-bottom: 8px;
+  }
+  .three-col .card h4 {
+    font-family: var(--serif); font-size: 20px; color: var(--ink);
+    margin-bottom: 6px; line-height: 1.2; letter-spacing: -0.01em;
+  }
+  .three-col .card p {
+    font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 0;
+  }
+  .pull-quote {
+    font-family: var(--serif); font-size: clamp(22px, 2.8vw, 30px);
+    font-style: italic; color: var(--ink); line-height: 1.35;
+    padding: 32px 0 32px 32px; border-left: 3px solid var(--coral);
+    margin: 40px 0; max-width: 680px;
+  }
+  .pull-quote em { color: var(--coral); }
+
+  /* Section header (mid-page) */
+  .section-header { max-width: 900px; margin: 0 auto 32px; padding: 0 40px; }
+  @media (max-width: 640px) { .section-header { padding: 0 20px; } }
+  .section-header .label {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--coral);
+    margin-bottom: 8px; display: block;
+  }
+  .section-header h3 {
+    font-family: var(--serif); font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.1; color: var(--ink);
+    letter-spacing: -0.02em; margin-bottom: 4px;
+  }
+  .section-header h3 em { font-style: italic; color: var(--coral); }
+  .section-header p {
+    font-size: 15px; color: var(--ink-soft); max-width: 620px; margin: 0;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 24px; padding: 32px 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    margin: 32px 0;
+  }
+  @media (max-width: 640px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat .n {
+    font-family: var(--serif); font-style: italic;
+    font-size: 40px; color: var(--coral); line-height: 1;
+  }
+  .stat .l {
+    font-family: var(--sans); font-size: 11px; color: var(--ink-faded);
+    letter-spacing: 0.14em; text-transform: uppercase; margin-top: 6px;
+  }
+
+  .next-project { padding: 80px 0; background: var(--paper); text-align: center; }
+  .next-project .label {
+    font-family: var(--serif); font-style: italic; font-size: 14px;
+    color: var(--ocean); margin-bottom: 12px; display: block;
+  }
+  .next-project h3 {
+    font-family: var(--serif); font-size: clamp(36px, 5vw, 60px);
+    color: var(--ink); letter-spacing: -0.02em; margin-bottom: 24px;
+  }
+  .next-project h3 em { font-style: italic; color: var(--ocean); }
+  .next-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 26px; background: var(--ink); color: var(--white);
+    text-decoration: none; border-radius: 100px;
+    font-size: 14px; font-weight: 500; transition: background 0.2s;
+  }
+  .next-btn:hover { background: var(--ocean-deep); }
+
+  footer {
+    padding: 24px 40px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-faded);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  footer .heart { color: var(--coral); }
+  footer a { color: var(--ink-soft); text-decoration: none; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  a:focus-visible { outline: 2px solid var(--ocean); outline-offset: 4px; border-radius: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="../index.html"><span class="mark">ak</span>Akshara</a>
+  <a class="nav-back" href="../index.html#work">← Back to work</a>
+</nav>
+
+<header class="case-hero">
+  <div class="container">
+    <span class="case-chip">Full-stack · Product · Brand</span>
+    <h1 class="case-title">Escape <em>McCombs</em>.</h1>
+    <p class="case-sub">
+      A coding escape room where teams solve Python puzzles in the browser — I built the whole thing solo, from Next.js + Supabase backend to the brand system on the posters.
+    </p>
+    <div class="case-meta">
+      <div class="meta-item"><div class="label">Role</div><div class="value">Solo <em>build</em></div></div>
+      <div class="meta-item"><div class="label">Team</div><div class="value">BAXA · McCombs</div></div>
+      <div class="meta-item"><div class="label">Timeline</div><div class="value">Spring 2026</div></div>
+      <div class="meta-item"><div class="label">Scope</div><div class="value">App · DB · Brand</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO: LIVE CODE EDITOR MOCK -->
+<div class="hero-visual">
+  <div class="code-stage">
+    <div class="code-editor-mock">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="file">room_3 · analytics.py</span>
+        <span class="badge">TEAM 07 · 14:32</span>
+      </div>
+      <div class="code-body">
+        <div class="code-input">
+          <div class="ln"><span class="n">1</span><span><span class="c"># Which customer segment churned most?</span></span></div>
+          <div class="ln"><span class="n">2</span><span><span class="k">import</span> <span class="m">pandas</span> <span class="k">as</span> <span class="m">pd</span></span></div>
+          <div class="ln"><span class="n">3</span><span><span class="k">import</span> <span class="m">matplotlib.pyplot</span> <span class="k">as</span> <span class="m">plt</span></span></div>
+          <div class="ln"><span class="n">4</span><span>&nbsp;</span></div>
+          <div class="ln"><span class="n">5</span><span><span class="v">df</span> = pd.<span class="f">read_csv</span>(<span class="s">"churn.csv"</span>)</span></div>
+          <div class="ln"><span class="n">6</span><span><span class="v">rates</span> = <span class="v">df</span>.<span class="f">groupby</span>(<span class="s">"segment"</span>)</span></div>
+          <div class="ln"><span class="n">7</span><span>&nbsp;&nbsp;.<span class="v">churn</span>.<span class="f">mean</span>()</span></div>
+          <div class="ln"><span class="n">8</span><span>&nbsp;</span></div>
+          <div class="ln"><span class="n">9</span><span><span class="v">rates</span>.<span class="f">plot</span>(<span class="v">kind</span>=<span class="s">"bar"</span>)</span></div>
+          <div class="ln"><span class="n">10</span><span>plt.<span class="f">show</span>()</span></div>
+        </div>
+        <div class="code-output">
+          <div class="label">Output</div>
+          <div class="out-line">segment</div>
+          <div class="out-line">enterprise    0.08</div>
+          <div class="out-line">mid_market    0.15</div>
+          <div class="out-line">smb           <span style="color: #d47a5a; font-weight: bold;">0.31</span></div>
+          <div class="plot-mock">
+            <div class="bar" style="height: 25%;"></div>
+            <div class="bar" style="height: 50%;"></div>
+            <div class="bar hi" style="height: 100%;"></div>
+          </div>
+          <div class="solved">Puzzle solved · Room 4 unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 01 THE BRIEF -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">01 / the brief</span>
+    <h2>Make analytics feel like <em>a game</em>, not homework.</h2>
+    <p>
+      BAXA — the Business Analytics Association at McCombs — wanted an escape-room-themed hackathon for Spring 2026. Teams would move through a series of rooms, each unlocked by solving a data analytics puzzle in code.
+    </p>
+    <p>
+      Off-the-shelf hackathon platforms are made for developers — cold, terminal-first, dashboard-heavy. That was the exact vibe we didn't want. The goal was to pull in business students, marketers, and even fine arts folks who'd never touched Python.
+    </p>
+    <p>
+      I built the whole thing solo — <strong>the app, the database, the brand system, and every piece of print collateral</strong>. Design and code together, not a handoff.
+    </p>
+  </div>
+</section>
+
+<!-- 02 THE APP — architecture diagram -->
+<section class="case-section" style="padding-bottom: 20px;">
+  <div class="section-header reveal">
+    <span class="label">02 / the app</span>
+    <h3>Real Python. <em>In the browser.</em></h3>
+    <p>Teams write actual Python — pandas, matplotlib, numpy — and it runs client-side via Pyodide (WebAssembly). No servers to spin up, no code sandboxes to maintain, no cost per user. The escape room scales for free.</p>
+  </div>
+</section>
+
+<div class="arch-showcase reveal">
+  <div class="arch-grid">
+    <div class="arch-node">
+      <div class="icon">🎨</div>
+      <div class="n">Next.js 14</div>
+      <div class="l">FRONTEND</div>
+    </div>
+    <div class="arch-node">
+      <div class="icon dark">🐍</div>
+      <div class="n">Pyodide</div>
+      <div class="l">PY IN BROWSER</div>
+    </div>
+    <div class="arch-node">
+      <div class="icon blue">🗄️</div>
+      <div class="n">Supabase</div>
+      <div class="l">DB + AUTH</div>
+    </div>
+    <div class="arch-node">
+      <div class="icon green">🚀</div>
+      <div class="n">Vercel</div>
+      <div class="l">DEPLOY</div>
+    </div>
+  </div>
+</div>
+
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <p>
+      Under the hood: <strong>Next.js 14 App Router with TypeScript</strong>, <strong>Tailwind</strong> for styling, <strong>Monaco Editor</strong> (the same editor VS Code uses) for the code input, <strong>Pyodide</strong> to execute Python + numpy + matplotlib in a WebAssembly sandbox, and <strong>Supabase Postgres</strong> for teams, progress, and code submissions.
+    </p>
+    <p>
+      Security wasn't optional — this ran under real team credentials. Every table has Row Level Security policies, passwords are bcrypt-hashed, the Supabase service key stays server-side, and the Pyodide sandbox has no file system, no network, and no shell access.
+    </p>
+
+    <div class="stack">
+      <span class="pill">Next.js 14</span>
+      <span class="pill">TypeScript</span>
+      <span class="pill">Tailwind</span>
+      <span class="pill">Supabase</span>
+      <span class="pill">Postgres + RLS</span>
+      <span class="pill">Pyodide</span>
+      <span class="pill">Monaco Editor</span>
+      <span class="pill">bcrypt</span>
+      <span class="pill">Vercel</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="n">3</div><div class="l">DB tables</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">API routes</div></div>
+      <div class="stat"><div class="n">4</div><div class="l">Puzzle rooms</div></div>
+      <div class="stat"><div class="n">$0</div><div class="l">Infra cost</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 DESIGN DECISIONS -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">03 / design decisions</span>
+    <h2>Design the <em>vibe</em> first, the interface second.</h2>
+    <p>
+      Most escape rooms lean into stress — flashing red timers, dark themes, dramatic music. I went the other direction: <strong>warm coral over cold blue, rounded corners over sharp edges, locks and progress bars borrowed from mobile games</strong>. A puzzle you want to solve, not one you're afraid of failing.
+    </p>
+    <div class="three-col">
+      <div class="card"><div class="num">i.</div><h4>Playful palette</h4><p>Coral gradients instead of BI-dashboard blue. Fun without becoming toy-like.</p></div>
+      <div class="card"><div class="num">ii.</div><h4>Progress you feel</h4><p>Every room adds a filled slot. Momentum you can see.</p></div>
+      <div class="card"><div class="num">iii.</div><h4>Clues, not questions</h4><p>Prompts written as riddles, not exam problems.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 BRAND SYSTEM -->
+<section class="case-section" style="padding-bottom: 20px;">
+  <div class="section-header reveal">
+    <span class="label">04 / brand system</span>
+    <h3>One voice, <em>every surface</em>.</h3>
+    <p>The app, the posters, the pitch deck — same logo mark, same coral, same italic serif. Everything shipped from one Figma file so no asset ever felt like a different event.</p>
+  </div>
+</section>
+
+<div class="brand-showcase reveal">
+  <div class="brand-grid">
+    <div class="brand-panel">
+      <div class="label">Logo mark</div>
+      <div class="logo-preview">
+        <div class="escape-logo">
+          <div class="icon">🔓</div>
+          <div class="wordmark">Escape <em>McCombs</em></div>
+          <div class="tag">BAXA · SPRING 2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-panel">
+      <div class="label">Color palette</div>
+      <div class="logo-preview" style="min-height: auto; padding: 0;">
+        <div class="colors-grid" style="width: 100%;">
+          <div class="swatch"><div class="chip" style="background: #d47a5a;"></div><div class="name">Coral</div></div>
+          <div class="swatch"><div class="chip" style="background: #a8583b;"></div><div class="name">Coral D</div></div>
+          <div class="swatch"><div class="chip" style="background: #1a1f26;"></div><div class="name">Ink</div></div>
+          <div class="swatch"><div class="chip" style="background: #3fb950;"></div><div class="name">Solve</div></div>
+          <div class="swatch"><div class="chip" style="background: #f4d5c2;"></div><div class="name">Cream</div></div>
+          <div class="swatch"><div class="chip" style="background: #fbfaf7;"></div><div class="name">Paper</div></div>
+          <div class="swatch"><div class="chip" style="background: #bf5700;"></div><div class="name">UT</div></div>
+          <div class="swatch"><div class="chip" style="background: #e6e2da;"></div><div class="name">Line</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 POSTERS -->
+<section class="case-section" style="padding-top: 20px; padding-bottom: 20px;">
+  <div class="section-header reveal">
+    <span class="label">05 / the posters</span>
+    <h3>Three posters, <em>one voice</em>.</h3>
+    <p>Poster series that ran in classrooms, hallways, and Slack channels. Same logo mark, same coral, three different feels — bold, mysterious, inviting — depending on where they landed.</p>
+  </div>
+</section>
+
+<div class="reveal">
+  <div class="posters">
+    <div class="poster p1">
+      <div class="tag">Registration Open</div>
+      <h4>Escape <em>McCombs</em></h4>
+      <div class="p-sub">can you crack the data?</div>
+      <div class="p-icon">🔓</div>
+      <div class="p-details">
+        <strong>March 22 · 6 PM</strong>
+        Rowling Hall · UT<br>
+        Teams of 3–5<br>
+        Free · Snacks<br>
+        Register at baxa.
+      </div>
+    </div>
+    <div class="poster p2">
+      <div class="tag">The Puzzle</div>
+      <h4>4 · 8 · 1 · <em>5 · ?</em></h4>
+      <div class="p-sub">figure it out.</div>
+      <div class="p-icon">🔒</div>
+      <div class="p-details">
+        <strong>You'll need to think</strong>
+        Data. Logic.<br>
+        Patterns. Team.<br>
+        4 rooms · 90 min<br>
+        Escape McCombs
+      </div>
+    </div>
+    <div class="poster p3">
+      <div class="tag">Winners' Prize</div>
+      <h4>First out <em>wins</em></h4>
+      <div class="p-sub">$500 + BAXA merch</div>
+      <div class="p-icon">🏆</div>
+      <div class="p-details">
+        <strong>The prize</strong>
+        $500 team cash<br>
+        BAXA merch<br>
+        Faculty coffee chat<br>
+        Bragging rights
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 WHAT I LEARNED -->
+<section class="case-section" style="padding-top: 60px;">
+  <div class="container-narrow reveal">
+    <span class="case-label">06 / what I learned</span>
+    <h2>Doing everything <em>changes everything</em>.</h2>
+    <p>
+      Being the designer and the engineer collapsed the usual handoff. Design decisions I'd normally have to explain in a spec — spacing, states, edge cases — I just built. And engineering constraints I'd normally hear about too late — Pyodide's 50MB load, Supabase's row limits, matplotlib rendering timing — I could design around from day one.
+    </p>
+    <p>
+      The one thing that mattered most: I picked the technical stack for the <strong>experience</strong>, not for my resume. Pyodide meant zero backend cost, which meant we could actually run the event. Supabase meant real auth in an afternoon. That's the tradeoff any product person eventually has to make — and I got to feel it end-to-end.
+    </p>
+    <blockquote class="pull-quote">
+      "The design changes <em>who shows up</em>. That's the whole job."
+    </blockquote>
+  </div>
+</section>
+
+<section class="next-project">
+  <span class="label">next project</span>
+  <h3>Daily <em>Activity Lab</em> →</h3>
+  <a href="activity-lab.html" class="next-btn">See Daily Activity Lab</a>
+</section>
+
+<footer>
+  <div>© 2026 Akshara Koratamaddi</div>
+  <div>made with <span class="heart">♡</span> in Austin, TX</div>
+  <div><a href="mailto:aksharakoratamaddi@utexas.edu">email</a> · <a href="https://www.linkedin.com/in/akshara-koratamaddi-" target="_blank" rel="noopener">linkedin</a></div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(r => observer.observe(r));
+</script>
+</body>
+</html>
