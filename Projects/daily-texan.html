@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#fbfaf7" />
+
+<title>The Daily Texan App — Akshara Koratamaddi</title>
+<meta name="description" content="Case study — designing the first-ever mobile app for The Daily Texan, one of the largest student-run newspapers in the U.S. Solo end-to-end design." />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='68' font-family='Georgia' font-style='italic' font-size='60' text-anchor='middle' fill='%235a9aa3'%3Eak%3C/text%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --white: #fbfaf7;
+    --paper: #f4f1ec;
+    --tint: #e8eeed;
+    --ocean: #5a9aa3;
+    --ocean-deep: #37747d;
+    --coral: #d47a5a;
+    --ink: #1a1f26;
+    --ink-soft: #4a5560;
+    --ink-faded: #8a939b;
+    --line: #e6e2da;
+
+    /* Daily Texan burnt orange — the newspaper's identity */
+    --dt-orange: #bf5700;
+    --dt-orange-soft: #d68240;
+
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --hand: 'Caveat', cursive;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  .container-narrow {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  @media (max-width: 640px) {
+    .container, .container-narrow { padding: 0 20px; }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(251, 250, 247, 0.85);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-style: italic;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-logo .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--ocean);
+    color: var(--white);
+    font-size: 14px;
+    font-style: italic;
+  }
+  .nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    transition: all 0.2s;
+  }
+  .nav-back:hover {
+    background: var(--ink);
+    color: var(--white);
+    border-color: var(--ink);
+  }
+
+  /* HERO */
+  .case-hero {
+    padding: 140px 0 60px;
+  }
+  .case-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--tint);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--ocean-deep);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 32px;
+  }
+  .case-chip::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--ocean);
+    border-radius: 50%;
+  }
+
+  .case-title {
+    font-family: var(--serif);
+    font-size: clamp(48px, 8.5vw, 118px);
+    line-height: 0.95;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    margin-bottom: 32px;
+  }
+  .case-title em { font-style: italic; color: var(--dt-orange); }
+
+  .case-sub {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(22px, 2.4vw, 28px);
+    color: var(--ink-soft);
+    line-height: 1.4;
+    max-width: 780px;
+    margin-bottom: 56px;
+  }
+
+  /* Meta strip */
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+    padding: 32px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 60px;
+  }
+  @media (max-width: 720px) {
+    .case-meta { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  }
+  .meta-item .label {
+    font-family: var(--sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faded);
+    margin-bottom: 6px;
+  }
+  .meta-item .value {
+    font-family: var(--serif);
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .meta-item .value em { font-style: italic; color: var(--dt-orange); }
+  .meta-item .value a {
+    color: var(--dt-orange);
+    text-decoration: none;
+    border-bottom: 1px solid var(--dt-orange);
+  }
+
+  /* ===== PHONE SHOWCASE — 4 mockup screens ===== */
+  .phone-showcase {
+    padding: 40px 0 100px;
+    background: linear-gradient(180deg, transparent 0%, var(--tint) 50%, var(--tint) 100%);
+    margin-bottom: 60px;
+  }
+  .phones {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .phone {
+    width: 200px;
+    aspect-ratio: 9/19.5;
+    background: var(--ink);
+    border-radius: 26px;
+    padding: 8px;
+    box-shadow: 0 30px 60px -20px rgba(26, 31, 38, 0.35);
+    position: relative;
+    transition: transform 0.4s ease;
+  }
+  .phone:hover { transform: translateY(-8px) rotate(-1deg); }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: var(--white);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 74px;
+    height: 18px;
+    background: var(--ink);
+    border-radius: 100px;
+    z-index: 3;
+  }
+  .phone-label {
+    position: absolute;
+    bottom: -32px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faded);
+  }
+
+  /* Phone 1 — Onboarding */
+  .phone-on .phone-screen {
+    background: linear-gradient(180deg, var(--dt-orange) 0%, #8f3d00 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px 20px 32px;
+    color: white;
+  }
+  .phone-on .brand {
+    text-align: center;
+  }
+  .phone-on .brand .tt {
+    font-family: 'Georgia', serif;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  .phone-on .brand .name {
+    font-family: 'Georgia', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 0.95;
+  }
+  .phone-on .center-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 12px;
+  }
+  .phone-on h3 {
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .phone-on p {
+    font-size: 10px;
+    text-align: center;
+    opacity: 0.9;
+    line-height: 1.4;
+    margin-bottom: 24px;
+  }
+  .phone-on .btn {
+    background: white;
+    color: var(--dt-orange);
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Phone 2 — Home feed */
+  .phone-home .phone-screen {
+    background: var(--white);
+    padding: 46px 12px 46px;
+    overflow: hidden;
+  }
+  .phone-home .h-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 10px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .phone-home .h-logo {
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dt-orange);
+    line-height: 1;
+  }
+  .phone-home .h-logo small {
+    display: block;
+    font-size: 6px;
+    letter-spacing: 0.2em;
+    color: var(--ink-faded);
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .phone-home .h-icons {
+    display: flex;
+    gap: 4px;
+  }
+  .phone-home .h-icons span {
+    width: 10px;
+    height: 10px;
+    background: var(--ink-faded);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+  .phone-home .h-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 4px 8px;
+    font-size: 8px;
+    color: var(--ink-faded);
+    font-weight: 500;
+  }
+  .phone-home .h-tabs span.active {
+    color: var(--dt-orange);
+    border-bottom: 2px solid var(--dt-orange);
+    padding-bottom: 2px;
+  }
+  .phone-home .h-hero {
+    height: 90px;
+    background: linear-gradient(135deg, #1a1f26, #37747d);
+    border-radius: 6px;
+    margin: 0 4px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone-home .h-hero::after {
+    content: 'STUDENT GOV VOTES TO EXPAND HOUSING';
+    position: absolute;
+    bottom: 6px;
+    left: 8px;
+    right: 8px;
+    color: white;
+    font-family: 'Georgia', serif;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .phone-home .h-hero::before {
+    content: 'NEWS';
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    background: var(--dt-orange);
+    color: white;
+    font-size: 6px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    z-index: 2;
+  }
+  .phone-home .h-item {
+    display: flex;
+    gap: 6px;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .phone-home .h-item .thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .phone-home .h-item.sport .thumb { background: linear-gradient(135deg, var(--dt-orange), var(--dt-orange-soft)); }
+  .phone-home .h-item.arts .thumb { background: linear-gradient(135deg, #37747d, var(--ocean)); }
+  .phone-home .h-item.op .thumb { background: linear-gradient(135deg, #666, #999); }
+  .phone-home .h-item .body {
+    flex: 1;
+    min-width: 0;
+  }
+  .phone-home .h-item .cat {
+    font-size: 6px;
+    color: var(--dt-orange);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+  }
+  .phone-home .h-item .title {
+    font-family: 'Georgia', serif;
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .phone-home .h-item .meta {
+    font-size: 5.5px;
+    color: var(--ink-faded);
+  }
+
+  /* Phone 3 — Article detail */
+  .phone-art .phone-screen {
+    background: var(--white);
+    padding: 46px 0 46px;
+    overflow: hidden;
+  }
+  .phone-art .a-back {
+    padding: 0 12px 6px;
+    font-size: 10px;
+    color: var(--dt-orange);
+  }
+  .phone-art .a-hero {
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(135deg, var(--dt-orange), #8f3d00);
+    position: relative;
+  }
+  .phone-art .a-cat {
+    padding: 6px 12px 2px;
+    font-size: 7px;
+    color: var(--dt-orange);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .phone-art .a-title {
+    padding: 0 12px 6px;
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  .phone-art .a-byline {
+    padding: 0 12px 8px;
+    font-size: 7px;
+    color: var(--ink-faded);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .phone-art .a-para {
+    padding: 0 12px;
+    font-family: 'Georgia', serif;
+    font-size: 8px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .phone-art .a-pullq {
+    padding: 6px 12px;
+    margin: 6px 12px;
+    border-left: 2px solid var(--dt-orange);
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  /* Phone 4 — Search / For You */
+  .phone-search .phone-screen {
+    background: var(--white);
+    padding: 46px 12px 46px;
+  }
+  .phone-search .s-search {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    color: var(--ink-faded);
+    margin-bottom: 12px;
+  }
+  .phone-search .s-search::before {
+    content: '⌕';
+    color: var(--ink-faded);
+    font-size: 12px;
+  }
+  .phone-search .s-h {
+    font-family: 'Georgia', serif;
+    font-size: 10px;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .phone-search .s-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .phone-search .s-tags span {
+    padding: 3px 8px;
+    border-radius: 100px;
+    font-size: 7px;
+    font-weight: 500;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+  .phone-search .s-tags span.on {
+    background: var(--dt-orange);
+    color: white;
+    border-color: var(--dt-orange);
+  }
+  .phone-search .s-notif {
+    background: linear-gradient(135deg, var(--tint), var(--paper));
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .phone-search .s-notif .lbl {
+    font-size: 6px;
+    color: var(--dt-orange);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 3px;
+  }
+  .phone-search .s-notif .txt {
+    font-family: 'Georgia', serif;
+    font-size: 8px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  /* Content sections */
+  section.case-section { padding: 60px 0; }
+
+  .case-section h2 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .case-section h2 em { font-style: italic; color: var(--dt-orange); }
+  .case-section h3 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .case-section h3 em { font-style: italic; color: var(--dt-orange); }
+  .case-section p {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+  .case-section p strong { color: var(--ink); font-weight: 500; }
+
+  .case-label {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--dt-orange);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* Stats row — The Daily Texan by the numbers */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 32px;
+    background: var(--paper);
+    border-radius: 12px;
+    margin: 32px 0;
+  }
+  @media (max-width: 640px) {
+    .stats-row { grid-template-columns: 1fr; gap: 20px; }
+  }
+  .stat {
+    text-align: left;
+  }
+  .stat .num {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 48px;
+    color: var(--dt-orange);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat .lbl {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  /* Six surfaces grid */
+  .surfaces-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 32px 0;
+  }
+  @media (max-width: 720px) { .surfaces-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .surfaces-grid { grid-template-columns: 1fr; } }
+
+  .surface {
+    padding: 20px;
+    background: var(--paper);
+    border-radius: 8px;
+    border-top: 3px solid var(--dt-orange);
+  }
+  .surface .num {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--dt-orange);
+    margin-bottom: 8px;
+  }
+  .surface h4 {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .surface p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  /* Design system swatch preview */
+  .ds-preview {
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 32px 0;
+  }
+  .ds-preview .ds-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faded);
+    margin-bottom: 16px;
+  }
+  .ds-colors {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .swatch .chip {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .swatch .name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .type-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .type-scale .row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+  }
+  .type-scale .row .txt { color: var(--ink); }
+  .type-scale .row .tag { font-family: var(--mono); font-size: 10px; color: var(--ink-faded); }
+
+  /* Pull quote */
+  .pull-quote {
+    font-family: var(--serif);
+    font-size: clamp(22px, 2.8vw, 30px);
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.35;
+    padding: 32px 0 32px 32px;
+    border-left: 3px solid var(--dt-orange);
+    margin: 40px 0;
+    max-width: 680px;
+  }
+  .pull-quote em { color: var(--dt-orange); }
+
+  /* Process timeline */
+  .timeline {
+    margin: 32px 0;
+    position: relative;
+    padding-left: 32px;
+    border-left: 2px solid var(--line);
+  }
+  .timeline .step {
+    position: relative;
+    padding-bottom: 32px;
+  }
+  .timeline .step::before {
+    content: '';
+    position: absolute;
+    left: -40px;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--dt-orange);
+    box-shadow: 0 0 0 4px var(--white);
+  }
+  .timeline .step:last-child { padding-bottom: 0; }
+  .timeline .step h4 {
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .timeline .step .stage {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--dt-orange);
+    margin-bottom: 4px;
+  }
+  .timeline .step p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  /* Figma link callout */
+  .figma-callout {
+    background: linear-gradient(135deg, #f4f1ec, #e8eeed);
+    padding: 32px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 40px 0;
+  }
+  .figma-callout .text h4 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .figma-callout .text p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 0;
+  }
+  .figma-callout .btn {
+    background: var(--ink);
+    color: var(--white);
+    padding: 12px 22px;
+    border-radius: 100px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .figma-callout .btn:hover { background: var(--dt-orange); }
+
+  /* Next project */
+  .next-project {
+    padding: 80px 0;
+    background: var(--paper);
+    text-align: center;
+  }
+  .next-project .label {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--dt-orange);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .next-project h3 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 60px);
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .next-project h3 em { font-style: italic; color: var(--ocean); }
+  .next-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 26px;
+    background: var(--ink);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .next-btn:hover { background: var(--ocean-deep); }
+
+  footer {
+    padding: 24px 40px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faded);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer .heart { color: var(--coral); }
+  footer a { color: var(--ink-soft); text-decoration: none; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  a:focus-visible {
+    outline: 2px solid var(--ocean);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="../index.html">
+    <span class="mark">ak</span>
+    Akshara
+  </a>
+  <a class="nav-back" href="../index.html#work">← Back to work</a>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="case-hero">
+  <div class="container">
+    <span class="case-chip">UI / UX · iOS &amp; Android · Prototype</span>
+    <h1 class="case-title">The Daily Texan <em>App.</em></h1>
+    <p class="case-sub">
+      Designing the first mobile app for The Daily Texan — one of the largest student-run newspapers in the country — end to end, solo.
+    </p>
+
+    <div class="case-meta">
+      <div class="meta-item">
+        <div class="label">Role</div>
+        <div class="value">Solo Product <em>Designer</em></div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Timeline</div>
+        <div class="value">Winter '25 → Spring '26</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Tools</div>
+        <div class="value">Figma · FigJam · Notion</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Status</div>
+        <div class="value">Stakeholder <em>review</em></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PHONE SHOWCASE ===== -->
+<div class="phone-showcase">
+  <div class="container">
+    <div class="phones">
+      <div class="phone phone-on">
+        <div class="phone-screen">
+          <div class="brand">
+            <div class="tt">SINCE 1900</div>
+            <div class="name">The Daily<br>Texan</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="center-icon">📰</div>
+            <h3>Your campus, in your pocket.</h3>
+            <p>Follow the sections that matter to you.</p>
+          </div>
+          <div class="btn">Get started →</div>
+        </div>
+        <div class="phone-label">01 · onboarding</div>
+      </div>
+
+      <div class="phone phone-home">
+        <div class="phone-screen">
+          <div class="h-header">
+            <div class="h-logo">Daily Texan<small>SINCE 1900</small></div>
+            <div class="h-icons"><span></span><span></span></div>
+          </div>
+          <div class="h-tabs">
+            <span class="active">For You</span>
+            <span>News</span>
+            <span>Sports</span>
+            <span>Life</span>
+            <span>Op-Ed</span>
+          </div>
+          <div class="h-hero"></div>
+          <div class="h-item sport">
+            <div class="thumb"></div>
+            <div class="body">
+              <div class="cat">SPORTS</div>
+              <div class="title">Longhorns clinch Big 12 title in overtime</div>
+              <div class="meta">3 min read · 2h ago</div>
+            </div>
+          </div>
+          <div class="h-item arts">
+            <div class="thumb"></div>
+            <div class="body">
+              <div class="cat">LIFE &amp; ARTS</div>
+              <div class="title">Inside Austin's new indie music venue</div>
+              <div class="meta">5 min read · 4h ago</div>
+            </div>
+          </div>
+          <div class="h-item op">
+            <div class="thumb"></div>
+            <div class="body">
+              <div class="cat">OPINION</div>
+              <div class="title">A better path for graduate housing</div>
+              <div class="meta">6 min read · 6h ago</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-label">02 · home feed</div>
+      </div>
+
+      <div class="phone phone-art">
+        <div class="phone-screen">
+          <div class="a-back">← Back</div>
+          <div class="a-hero"></div>
+          <div class="a-cat">NEWS · CAMPUS</div>
+          <div class="a-title">Student gov votes to expand housing</div>
+          <div class="a-byline">By Jamie Rivera · 8 min read</div>
+          <div class="a-para">The measure, passed unanimously Tuesday, allocates funding toward three new residential blocks by 2028.</div>
+          <div class="a-pullq">"This is the biggest housing shift the campus has seen in a decade."</div>
+          <div class="a-para">Student leaders framed the plan as a response to years of rising rents surrounding the university.</div>
+        </div>
+        <div class="phone-label">03 · article view</div>
+      </div>
+
+      <div class="phone phone-search">
+        <div class="phone-screen">
+          <div class="s-search">Search articles, authors...</div>
+          <div class="s-h">Personalize your feed</div>
+          <div class="s-tags">
+            <span class="on">News</span>
+            <span class="on">Sports</span>
+            <span>Life &amp; Arts</span>
+            <span class="on">Opinion</span>
+            <span>Culture</span>
+          </div>
+          <div class="s-h">Notifications</div>
+          <div class="s-notif">
+            <div class="lbl">BREAKING</div>
+            <div class="txt">Student gov approves new housing bill</div>
+          </div>
+          <div class="s-notif">
+            <div class="lbl">MORNING BRIEF</div>
+            <div class="txt">Today's top 5 stories on campus</div>
+          </div>
+        </div>
+        <div class="phone-label">04 · search &amp; personalization</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 01 THE PROBLEM ===== -->
+<section class="case-section" style="padding-top: 100px;">
+  <div class="container-narrow reveal">
+    <span class="case-label">01 / the problem</span>
+    <h2>125 years old. A website. <em>No app.</em></h2>
+    <p>
+      The Daily Texan has been reporting on the University of Texas since 1900. It publishes daily, has won more college journalism awards than any other paper in the country, and reaches tens of thousands of students, faculty, and Austin residents every week — <strong>through a website that wasn't built for how students actually read the news.</strong>
+    </p>
+    <p>
+      Students don't sit at a laptop to check what's happening on campus. They're between classes on the Speedway shuttle, in line at Kins, waiting outside a lecture hall. They scroll on their phones. And when they do, they get a desktop-first newspaper website that expects them to know what section they want, hunt for it, and pinch-to-zoom their way through the article.
+    </p>
+    <p>
+      <strong>The paper needed a mobile app.</strong> Not a shrunken website — a real, opinionated iOS/Android product that treated a student's phone as the primary reading surface. That's the project I took on.
+    </p>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="num">125+</div>
+        <div class="lbl">Years the DT has published — the oldest continuously operating student newspaper in the South</div>
+      </div>
+      <div class="stat">
+        <div class="num">50K+</div>
+        <div class="lbl">UT Austin students who are the DT's primary audience — nearly all mobile-first</div>
+      </div>
+      <div class="stat">
+        <div class="num">0</div>
+        <div class="lbl">Native mobile apps in DT history before this project began</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 THE APPROACH ===== -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">02 / the approach</span>
+    <h2>Designing every surface, from <em>splash</em> to <em>settings.</em></h2>
+    <p>
+      Because this was a greenfield app — no existing product, no legacy patterns to inherit — I owned the full product surface. That meant everything from the onboarding flow to the article typography to the search behavior had to be designed in a way that felt consistent, current, and unmistakably Daily Texan.
+    </p>
+    <p>
+      I broke the app into <strong>six core surfaces</strong> and designed each one with intention:
+    </p>
+
+    <div class="surfaces-grid">
+      <div class="surface">
+        <div class="num">i.</div>
+        <h4>Onboarding</h4>
+        <p>A short, opinionated flow that gets a new reader from splash screen to their first article in under 30 seconds.</p>
+      </div>
+      <div class="surface">
+        <div class="num">ii.</div>
+        <h4>Home feed</h4>
+        <p>A "For You" tab that mixes editorial curation with the reader's followed sections — a hero story, then a scannable list.</p>
+      </div>
+      <div class="surface">
+        <div class="num">iii.</div>
+        <h4>Section nav</h4>
+        <p>Fast horizontal tab bar for News, Sports, Life &amp; Arts, and Opinion. Every section gets its own feed treatment.</p>
+      </div>
+      <div class="surface">
+        <div class="num">iv.</div>
+        <h4>Article view</h4>
+        <p>A reader-first article layout — legible serif type, generous margins, tap-friendly bylines, and inline pull quotes.</p>
+      </div>
+      <div class="surface">
+        <div class="num">v.</div>
+        <h4>Search &amp; personalization</h4>
+        <p>Search by article, author, or topic. Follow sections to shape the "For You" feed.</p>
+      </div>
+      <div class="surface">
+        <div class="num">vi.</div>
+        <h4>Design system</h4>
+        <p>A tokenized library of colors, type, spacing, and components — reusable across every screen and future features.</p>
+      </div>
+    </div>
+
+    <p>Every one of these lives in a single Figma file, connected through auto-layout components and shared styles.</p>
+  </div>
+</section>
+
+<!-- ===== 03 THE DESIGN SYSTEM ===== -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">03 / the design system</span>
+    <h2>A visual identity that reads <em>newspaper</em> — and native.</h2>
+    <p>
+      The DT's brand is unmistakable — <strong>burnt orange</strong>, serif masthead, high-contrast layouts. My challenge was translating that identity from broadsheet to touchscreen without losing what makes it feel like a paper. The design system anchors that translation.
+    </p>
+
+    <div class="ds-preview">
+      <div class="ds-label">Color tokens</div>
+      <div class="ds-colors">
+        <div class="swatch"><div class="chip" style="background: #bf5700;"></div><div class="name">DT Orange</div></div>
+        <div class="swatch"><div class="chip" style="background: #d68240;"></div><div class="name">DT Soft</div></div>
+        <div class="swatch"><div class="chip" style="background: #1a1f26;"></div><div class="name">Ink</div></div>
+        <div class="swatch"><div class="chip" style="background: #4a5560;"></div><div class="name">Body</div></div>
+        <div class="swatch"><div class="chip" style="background: #f4f1ec; border: 1px solid var(--line);"></div><div class="name">Paper</div></div>
+        <div class="swatch"><div class="chip" style="background: #ffffff; border: 1px solid var(--line);"></div><div class="name">Surface</div></div>
+      </div>
+
+      <div class="ds-label">Type scale</div>
+      <div class="type-scale">
+        <div class="row">
+          <span class="txt" style="font-family: Georgia, serif; font-size: 28px; font-weight: 700;">Headline</span>
+          <span class="tag">28 / bold serif</span>
+        </div>
+        <div class="row">
+          <span class="txt" style="font-family: Georgia, serif; font-size: 20px; font-weight: 700;">Article title</span>
+          <span class="tag">20 / bold serif</span>
+        </div>
+        <div class="row">
+          <span class="txt" style="font-family: Georgia, serif; font-size: 16px;">Body paragraph — this is how the article reads.</span>
+          <span class="tag">16 / serif</span>
+        </div>
+        <div class="row">
+          <span class="txt" style="font-size: 13px; color: var(--dt-orange); font-weight: 700; letter-spacing: 0.08em;">CATEGORY LABEL</span>
+          <span class="tag">13 / caps sans</span>
+        </div>
+        <div class="row">
+          <span class="txt" style="font-size: 12px; color: var(--ink-faded);">Byline · 4 min read</span>
+          <span class="tag">12 / meta sans</span>
+        </div>
+      </div>
+    </div>
+
+    <p>Every button, chip, tab, and card in the app pulls from these tokens. Change the orange in one place and the whole app updates.</p>
+  </div>
+</section>
+
+<!-- ===== 04 THE PROCESS ===== -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">04 / the process</span>
+    <h2>From research to review, one Figma <em>file.</em></h2>
+
+    <div class="timeline">
+      <div class="step">
+        <div class="stage">01 · research</div>
+        <h4>Talking to student readers</h4>
+        <p>Interviewed UT students about how, when, and where they consume DT content today. The pattern was clear — mobile web, brief sessions, often before or after class.</p>
+      </div>
+      <div class="step">
+        <div class="stage">02 · audit</div>
+        <h4>Auditing peer news apps</h4>
+        <p>Studied NYT, WaPo, Bloomberg, and other student papers (Harvard Crimson, Stanford Daily). Pulled patterns I liked and flagged ones that wouldn't survive contact with the DT's editorial style.</p>
+      </div>
+      <div class="step">
+        <div class="stage">03 · IA</div>
+        <h4>Sketching the information architecture</h4>
+        <p>Mapped every screen the app could contain in FigJam, then cut to the six surfaces above. Deferred everything else (bookmarks, comments, dark mode) to v2.</p>
+      </div>
+      <div class="step">
+        <div class="stage">04 · design</div>
+        <h4>Building screens on the design system</h4>
+        <p>Built the color and type tokens first, then components (cards, chips, article header, tab bar), then screens. Every screen composed of tokens — no one-off styling.</p>
+      </div>
+      <div class="step">
+        <div class="stage">05 · review</div>
+        <h4>Walking stakeholders through the prototype</h4>
+        <p>Currently reviewing with DT editorial leadership. Feedback is shaping v2 — most notably tightening the onboarding flow and adding a bookmark surface.</p>
+      </div>
+    </div>
+
+    <blockquote class="pull-quote">
+      "This is the first time in <em>125 years</em> that a student will open a Daily Texan app on their phone. That responsibility shaped every screen."
+    </blockquote>
+  </div>
+</section>
+
+<!-- ===== 05 WHAT I LEARNED ===== -->
+<section class="case-section">
+  <div class="container-narrow reveal">
+    <span class="case-label">05 / what I learned</span>
+    <h2>Designing for an institution is different from designing for a <em>startup.</em></h2>
+    <p>
+      Startups let you invent the brand as you go. Newspapers already have one — a masthead, a color, a voice, a century of visual identity you can't just throw out. The interesting design problem wasn't "what should this look like?" — it was <strong>"how does this feel like The Daily Texan the moment a student opens it?"</strong>
+    </p>
+    <p>
+      Building the design system before the screens turned out to be the single best decision I made. The moment I had orange, ink, serif, and paper tokens defined, every downstream design decision got 10× faster — and the whole app started to feel consistent by default rather than by manual review.
+    </p>
+    <p>
+      Next iterations: interactive prototype in Figma with real navigation between screens, an accessibility audit against WCAG AA, and — if the app moves to build — engineering handoff docs on how each screen composes from the token library.
+    </p>
+  </div>
+</section>
+
+<!-- ===== FIGMA LINK ===== -->
+<section class="case-section" style="padding-top: 20px;">
+  <div class="container-narrow reveal">
+    <div class="figma-callout">
+      <div class="text">
+        <h4>See the full Figma file</h4>
+        <p>Every screen, component, and token — laid out in one working file.</p>
+      </div>
+      <a class="btn" href="https://www.figma.com/design/MT0gjDUHO17bkxGnuC9g0a/DT-App-Winter-25-Mockup--Copy-?node-id=0-1&p=f" target="_blank" rel="noopener">Open in Figma ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NEXT PROJECT ===== -->
+<section class="next-project">
+  <span class="label">next project</span>
+  <h3>Prompt<em>Shield</em> 🛡️ →</h3>
+  <a href="promptshield.html" class="next-btn">See PromptShield</a>
+</section>
+
+<footer>
+  <div>© 2026 Akshara Koratamaddi</div>
+  <div>made with <span class="heart">♡</span> in Austin, TX</div>
+  <div><a href="mailto:aksharakoratamaddi@utexas.edu">email</a> · <a href="https://www.linkedin.com/in/akshara-koratamaddi-" target="_blank" rel="noopener">linkedin</a></div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(r => observer.observe(r));
+</script>
+
+</body>
+</html>
